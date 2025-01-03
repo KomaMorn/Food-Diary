@@ -1,0 +1,41 @@
+services:
+
+  backend:
+    container_name: food-diary-backend
+    build:
+      context: ./backend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      - db
+
+  nginx:
+    container_name: food-diary-nginx
+    image: nginx:1.27.2
+    ports:
+      - 2800:80
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./backend:/var/www/html
+    depends_on:
+      - backend
+      - db
+
+  db:
+    container_name: food-diary-postgres
+    image: postgres:15.10
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - food-diary-db-data:/var/lib/postgresql/data
+
+volumes:
+  food-diary-db-data:
+    name: food-diary-db-data
